@@ -62,6 +62,11 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     [snackBar show];
 }
 
++ (void)dismiss {
+    RNSnackBarView *snackBar = [RNSnackBarView sharedSnackBar];
+    [snackBar dismiss];
+}
+
 - (instancetype)init
 {
     self = [super initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height - 48, [UIScreen mainScreen].bounds.size.width, 48)];
@@ -73,6 +78,8 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
 
 - (void)buildView {
     self.backgroundColor = [UIColor colorWithRed:0.196078F green:0.196078F blue:0.196078F alpha:1.0F];
+    self.accessibilityIdentifier = @"snackbar";
+  
     titleLabel = [UILabel new];
     titleLabel.text = _title;
     titleLabel.numberOfLines = 2;

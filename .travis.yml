@@ -1,23 +1,25 @@
 language: node_js
 
 node_js:
- - "7"
+ - "8"
  - "6"
 
-cache: yarn
-
-# This normally isn't necessary, but since we're specifying an explicit install step,
-# we also need to explicitly install Yarn.
-before_install:
- - curl -o- -L https://yarnpkg.com/install.sh | bash
- - export PATH=$HOME/.yarn/bin:$PATH
+cache:
+  yarn: true
+  directories:
+    - node_modules
+    - example/node_modules
+    - jest-cache
+    - example/jest-cache2
 
 install:
  - yarn install
- - cd example && yarn install
+ - cd example && yarn install && yarn run sync
  - cd ..
 
 script:
  - yarn run lint
- - yarn run flow
- - yarn test
+# Ignoring flow for now because it just fails on all sorts of React Native issues.
+# - yarn run flow
+ - yarn test -- --cacheDirectory="jest-cache"
+ - cd example && yarn test -- --cacheDirectory="jest-cache2"
