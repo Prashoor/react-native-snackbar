@@ -1,37 +1,34 @@
-// Type definitions for react-native-snackbar 0.3.4
-// Project: https://github.com/cooperka/react-native-snackbar
-// Definitions by: Kyle Roach <https://github.com/iRoachie>
-// TypeScript Version: 2.2.2
+// TypeScript typings.
 
 /**
- * An actionable button that can be shown on the Snackbar.
+ * An optional, actionable button on the Snackbar.
  */
-interface Action {
+export interface SnackbarAction {
   /**
-   * Text for the button.
+   * Button text.
    */
-  title: string;
+  text: string;
 
   /**
-   * Color of the text for the button.
+   * Button text color.
    * Accepts various forms of colors such as hex, literals, rgba, etc.
    */
-  color?: string | number;
+  textColor?: string | number;
 
   /**
-   * Function called when the user presses the button.
+   * Function called when the user taps the button.
    */
   onPress?(): void;
 }
 
 /**
- * List of options to configure the Snackbar.
+ * Snackbar configuration options.
  */
-interface SnackBarOptions {
-   /**
-   * The text that appears on the Snackbar.
+export interface SnackBarOptions {
+  /**
+   * Snackbar text.
    */
-  title: string;
+  text: string;
 
   /**
    * Length of time the Snackbar stays on screen.
@@ -40,40 +37,57 @@ interface SnackBarOptions {
   duration?: number;
 
   /**
-   * Background color of the snackbar
+   * Snackbar text color.
+   * Accepts various forms of colors such as hex, literals, rgba, etc.
+   */
+  textColor?: string | number;
+
+  /**
+   * Background color of the snackbar.
    * Accepts color strings such as hex, literals, rgba
    */
   backgroundColor?: string;
 
   /**
-   * Adds an actionable button to the snackbar on the right
+   * [Android] The basename of a .ttf font from assets/fonts/.
    */
-  action?: Action;
+  fontFamily?: string;
+
+  /**
+   * Action button configuration options.
+   */
+  action?: SnackbarAction;
 }
 
 /**
- * Snackbar duration of about a second.
+ * Static Snackbar attributes.
  */
-export const LENGTH_SHORT: number;
+export interface SnackbarStatic {
+  /**
+   * Snackbar duration of about one second (varies per device).
+   */
+  LENGTH_SHORT: number;
 
-/**
- * Snackbar duration of about three seconds.
- */
-export const LENGTH_LONG: number;
+  /**
+   * Snackbar duration of about three seconds (varies per device).
+   */
+  LENGTH_LONG: number;
 
-/**
- * Snackbar duration that lasts forever (until a new Snackbar is shown).
- */
-export const LENGTH_INDEFINITE: number;
+  /**
+   * Snackbar duration that lasts forever (until dismissed, replaced, or action button is tapped).
+   */
+  LENGTH_INDEFINITE: number;
 
-/**
- * Shows a native Snackbar component.
- *
- * @param {SnackBarOptions} options
- */
-export function show(options: SnackBarOptions): void;
+  /**
+   * Shows a native Snackbar component.
+   */
+  show(options: SnackBarOptions): void;
 
-/**
-* Dismisses any and all active Snackbars.
-*/
-export function dismiss(): void;
+  /**
+   * Dismisses any and all active Snackbars.
+   */
+  dismiss(): void;
+}
+
+declare const Snackbar: SnackbarStatic;
+export default Snackbar;

@@ -5,7 +5,8 @@
 [![npm version](https://img.shields.io/npm/v/react-native-snackbar.svg)](https://www.npmjs.com/package/react-native-snackbar)
 [![Latest GitHub tag](https://img.shields.io/github/tag/cooperka/react-native-snackbar.svg)](https://github.com/cooperka/react-native-snackbar)
 
-Material-design "Snackbar" component for Android and iOS:
+Material Design "Snackbar" component for Android and iOS.
+Supports custom colors, fonts, and languages.
 
 ![Snackbar screenshot](example/screenshots/snackbar.png)
 
@@ -19,8 +20,8 @@ and when to use them.
 
 ```js
 Snackbar.show({
-    title: 'Hello world',
-    duration: Snackbar.LENGTH_SHORT,
+  text: 'Hello world',
+  duration: Snackbar.LENGTH_SHORT,
 });
 ```
 
@@ -28,13 +29,13 @@ Or, to include an action button:
 
 ```js
 Snackbar.show({
-    title: 'Hello world',
-    duration: Snackbar.LENGTH_INDEFINITE,
-    action: {
-        title: 'UNDO',
-        color: 'green',
-        onPress: () => { /* Do something. */ },
-    },
+  text: 'Hello world',
+  duration: Snackbar.LENGTH_INDEFINITE,
+  action: {
+    text: 'UNDO',
+    textColor: 'green',
+    onPress: () => { /* Do something. */ },
+  },
 });
 ```
 
@@ -45,8 +46,10 @@ Snackbar.show({
     - Using [Yarn](https://yarnpkg.com/): `yarn add react-native-snackbar`
 
 2. [Link](https://facebook.github.io/react-native/docs/linking-libraries-ios.html):
-    - `react-native link react-native-snackbar`
+    - RN >= 0.60 supports [autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md): first `cd ios && pod install && cd ..`
+    - RN < 0.60: `react-native link react-native-snackbar`
     - Or if that fails, link manually using [these steps](https://github.com/cooperka/react-native-snackbar/wiki/Manual-Installation)
+    - Note that because this is a native module, Expo does not support it -- to use with Expo you need to [eject to ExpoKit](https://docs.expo.io/versions/latest/expokit/eject/)
 
 3. Import it in your JS:
 
@@ -54,43 +57,71 @@ Snackbar.show({
     import Snackbar from 'react-native-snackbar';
     ```
 
-## Customization
+## Usage
 
-`Snackbar.show()` accepts the following options:
+### Snackbar.show(options)
+
+Shows a Snackbar, dismissing any existing Snackbar first. Accepts an object with the following options:
 
 | Key | Data type | Default value? | Description |
 |-----|-----------|----------------|-------------|
-| `title` | `string` | Required. | The message to show. |
+| `text` | `string` | Required. | The message to show. |
 | `duration` | See below | `Snackbar.LENGTH_SHORT` | How long to display the Snackbar. |
+| `textColor` | `string` or `style` | `'white'` | The color of the message text. |
+| `backgroundColor` | `string` or `style` | `undefined` (dark gray) | The background color for the whole Snackbar. |
+| `fontFamily` | `string` | `undefined` | [Android only] The basename of a `.ttf` font from `assets/fonts/` (see [setup guide](https://github.com/facebook/react-native/issues/25852) and [example app](/example), remember to `react-native link` after). |
+| `rtl` | `boolean` | `false` | [Android only, API 17+] Whether the Snackbar should render right-to-left (requires `android:supportsRtl="true"`, see [setup guide](https://android-developers.googleblog.com/2013/03/native-rtl-support-in-android-42.html) and [example app](/example)). |
 | `action` | `object` (described below) | `undefined` (no button) | Optional config for the action button (described below). |
-| `backgroundColor` | `string` or `style` | `undefined` (natively renders as black) | The background color for the whole Snackbar. |
 
 Where `duration` can be one of the following (timing may vary based on device):
 
 - `Snackbar.LENGTH_SHORT` (just over a second)
 - `Snackbar.LENGTH_LONG` (about three seconds)
-- `Snackbar.LENGTH_INDEFINITE` (stays on screen until the button is pressed)
+- `Snackbar.LENGTH_INDEFINITE` (stays on screen until dismissed, replaced, or action button is tapped)
 
-And the optional `action` object can contain the following options:
+Note: the `text` will ellipsize after 2 lines of text on most platforms. See [#110](https://github.com/cooperka/react-native-snackbar/issues/110) if you need to display more lines.
+
+The optional `action` object can contain the following options:
 
 | Key | Data type | Default value? | Description |
 |-----|-----------|----------------|-------------|
-| `title` | `string` | Required. | The text to show on the button. |
+| `text` | `string` | Required. | The button text. |
+| `textColor` | `string` or `style` | `'white'` | The color of the button text. |
 | `onPress` | `function` | `undefined` (Snackbar is simply dismissed) | A callback for when the user taps the button. |
-| `color` | `string` or `style` | `undefined` (natively renders as white) | The text color for the button. |
 
-## Notes
+Deprecation note: The old keys `title` and `color` have been replaced by `text` and `textColor` for consistency.
+The old keys will continue to work for now but are deprecated and may be removed at any time.
 
-A few people have [suggested](https://github.com/cooperka/react-native-snackbar/issues/2)
-that the default Gradle configs created by `react-native init` are too outdated.
+### Snackbar.dismiss()
+
+Dismisses any existing Snackbars.
+
+## Troubleshooting
+
+#### Snackbar not appearing [Android]
+
+The Snackbar is designed to attach to whatever view is on top of your screen when `show` is called. If that view happens to be a temporary alert modal or some other view that goes away, you'll never see the Snackbar.
+
+A workaround in some cases is to use `setTimeout` to show the Snackbar a few seconds later after the modal is gone. See [issue #28](https://github.com/cooperka/react-native-snackbar/issues/28) for further discussion. If you want to submit a PR to improve the view-finding logic, feel free.
+
+#### Undefined import
+
+If you see errors similar to `Cannot read property 'LENGTH_LONG' of undefined` or `Undefined not an object (NativeModules.RNSnackbar)`, please refer to [issue #43](https://github.com/cooperka/react-native-snackbar/issues/43) for help.
+
+#### Compiling [Android]
+
 If you have issues compiling for Android after linking this library,
-please try upgrading Gradle to the latest version! For example:
+please try updating your Gradle and Android configs to the latest versions. For example:
 
 In your `android/build.gradle`:
 
-- `com.android.tools.build:gradle:2.2.2`
+- `com.android.tools.build:gradle:3.4.1` (or higher)
 
 In your `android/app/build.gradle`:
 
-- `compileSdkVersion 25`
-- `buildToolsVersion "25.0.2"`
+- `compileSdkVersion 28` (or higher)
+- `buildToolsVersion "28.0.3"` (or higher)
+
+#### Compiling [iOS]
+
+Make sure your Deployment Target is iOS 9.0 or above.

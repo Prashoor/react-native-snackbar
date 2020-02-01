@@ -1,8 +1,10 @@
 package com.azendoo.reactnativesnackbar;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
+import com.google.android.material.snackbar.Snackbar;
+
 import android.os.Build;
-import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -18,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SnackbarModule extends ReactContextBaseJavaModule{
+public class SnackbarModule extends ReactContextBaseJavaModule {
 
     private static final String REACT_NAME = "RNSnackbar";
 
@@ -63,8 +65,10 @@ public class SnackbarModule extends ReactContextBaseJavaModule{
             // The view is not focused, we should get all the modal views in the screen.
             ArrayList<View> modals = recursiveLoopChildren(view, new ArrayList<View>());
 
-            for (View modalViews : modals) {
-                displaySnackbar(modalViews, options, callback);
+            for (View modal : modals) {
+                if (modal == null) continue;
+
+                displaySnackbar(modal, options, callback);
             }
 
             return;
@@ -85,36 +89,67 @@ public class SnackbarModule extends ReactContextBaseJavaModule{
     }
 
     private void displaySnackbar(View view, ReadableMap options, final Callback callback) {
-        String title = options.hasKey("title") ? options.getString("title") : "";
-        int duration = options.hasKey("duration") ? options.getInt("duration") : Snackbar.LENGTH_SHORT;
+        String text = getOptionValue(options, "text", "");
+        int duration = getOptionValue(options, "duration", Snackbar.LENGTH_SHORT);
+        int textColor = getOptionValue(options, "textColor", Color.WHITE);
+        boolean rtl = getOptionValue(options, "rtl", false);
+        String fontFamily = getOptionValue(options, "fontFamily", null);
+        Typeface font = null;
+        if (fontFamily != null) {
+            try {
+                font = Typeface.createFromAsset(view.getContext().getAssets(), "fonts/" + fontFamily + ".ttf");
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new Error("Failed to load font " + fontFamily + ".ttf, did you include it in your assets?");
+            }
+        }
 
-        Snackbar snackbar = Snackbar.make(view, title, duration);
+        Snackbar snackbar = Snackbar.make(view, text, duration);
+        View snackbarView = snackbar.getView();
+
+        if (rtl && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            snackbarView.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+            snackbarView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        }
+
+        TextView snackbarText = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+        snackbarText.setTextColor(textColor);
+
+        if (font != null) {
+            snackbarText.setTypeface(font);
+        }
+
         mActiveSnackbars.add(snackbar);
 
-        // Set the background color.
         if (options.hasKey("backgroundColor")) {
-            snackbar.getView().setBackgroundColor(options.getInt("backgroundColor"));
+            snackbarView.setBackgroundColor(options.getInt("backgroundColor"));
         }
 
         if (options.hasKey("action")) {
+            ReadableMap actionOptions = options.getMap("action");
+            String actionText = getOptionValue(actionOptions, "text", "");
+            int actionTextColor = getOptionValue(actionOptions, "textColor", Color.WHITE);
+
             View.OnClickListener onClickListener = new View.OnClickListener() {
+                // Prevent double-taps which can lead to a crash.
+                boolean callbackWasCalled = false;
+
                 @Override
                 public void onClick(View v) {
+                    if (callbackWasCalled) return;
+                    callbackWasCalled = true;
+
                     callback.invoke();
                 }
             };
 
-            ReadableMap actionDetails = options.getMap("action");
-            snackbar.setAction(actionDetails.getString("title"), onClickListener);
-            snackbar.setActionTextColor(actionDetails.getInt("color"));
-        }
+            snackbar.setAction(actionText, onClickListener);
+            snackbar.setActionTextColor(actionTextColor);
 
-        // For older devices, explicitly set the text color; otherwise it may appear dark gray.
-        // http://stackoverflow.com/a/31084530/763231
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            View snackbarView = snackbar.getView();
-            TextView snackbarText = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-            snackbarText.setTextColor(Color.WHITE);
+            if (font != null) {
+                TextView snackbarActionText = snackbarView.findViewById(com.google.android.material.R.id.snackbar_action);
+                snackbarActionText.setTypeface(font);
+            }
         }
 
         snackbar.show();
@@ -137,6 +172,18 @@ public class SnackbarModule extends ReactContextBaseJavaModule{
         }
 
         return modals;
+    }
+
+    private String getOptionValue(ReadableMap options, String key, String fallback) {
+        return options.hasKey(key) ? options.getString(key) : fallback;
+    }
+
+    private int getOptionValue(ReadableMap options, String key, int fallback) {
+        return options.hasKey(key) ? options.getInt(key) : fallback;
+    }
+
+    private boolean getOptionValue(ReadableMap options, String key, boolean fallback) {
+        return options.hasKey(key) ? options.getBoolean(key) : fallback;
     }
 
 }
